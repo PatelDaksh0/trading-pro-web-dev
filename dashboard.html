@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio | TradeMaster Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom CSS for animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .popup-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            transform: scale(0.7);
+            transition: all 0.3s ease;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .popup-overlay.active .popup-content {
+            transform: scale(1);
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+        }
+        
+        /* Custom chart styles */
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            background-color: rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .chart-bar:hover {
+            background-color: white;
+        }
+        
+        /* Custom dropdown */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 12px 16px;
+            display: block;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .dropdown-divider {
+            border-top: 1px solid #e2e8f0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Popup Modals -->
+    <div id="editNamePopup" class="popup-overlay">
+        <div class="popup-content relative">
+            <button onclick="closePopup('editNamePopup')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">Edit Profile</h3>
+            <div class="flex flex-col space-y-3">
+                <div>
+                    <label class="block text-gray-700 mb-1">First Name</label>
+                    <input type="text" id="firstNameInput" class="w-full px-4 py-2 border rounded" value="John">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-1">Last Name</label>
+                    <input type="text" id="lastNameInput" class="w-full px-4 py-2 border rounded" value="Doe">
+                </div>
+                <button onclick="updateProfileName()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded transition duration-300">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="privacyPopup" class="popup-overlay">
+        <div class="popup-content relative">
+            <button onclick="closePopup('privacyPopup')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">Privacy Settings</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">Email Notifications</p>
+                        <p class="text-sm text-gray-600">Receive updates and alerts via email</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">SMS Notifications</p>
+                        <p class="text-sm text-gray-600">Receive important alerts via SMS</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">Two-Factor Authentication</p>
+                        <p class="text-sm text-gray-600">Add an extra layer of security to your account</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+                
+                <div class="pt-4 border-t">
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded transition duration-300">
+                        Save Privacy Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Banner -->
+    <div class="bg-yellow-100 text-yellow-800 py-2 px-4 text-center">
+        <div class="container mx-auto">
+            <span class="font-bold">Welcome back, John!</span> Your portfolio is up <span class="text-green-600 font-bold">2.4%</span> today.
+        </div>
+    </div>
+    
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="index.html" class="flex items-center">
+                        <i class="fas fa-chart-line text-blue-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-blue-800">TradeMaster <span class="text-blue-500">Pro</span></span>
+                    </a>
+                </div>
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="dashboard.html" class="text-blue-800 hover:text-blue-600 font-medium">Dashboard</a>
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
+                    <a href="About.html" class="text-gray-700 hover:text-blue-600 font-medium">About</a>
+                    <a href="contact.html" class="text-gray-700 hover:text-blue-600 font-medium">Contact</a>
+                    <!-- User Dropdown -->
+                    <div class="dropdown relative">
+                        <button class="flex items-center space-x-2 focus:outline-none">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-blue-800 font-medium">JD</span>
+                            </div>
+                            <span class="font-medium">John Doe</span>
+                            <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user-circle mr-2 text-gray-500"></i> My Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog mr-2 text-gray-500"></i> Account Settings
+                            </a>
+                            <a href="#" onclick="openPopup('privacyPopup')" class="dropdown-item">
+                                <i class="fas fa-lock mr-2 text-gray-500"></i> Privacy
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" onclick="openPopup('editNamePopup')" class="dropdown-item">
+                                <i class="fas fa-edit mr-2 text-gray-500"></i> Edit Name
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="index.html" class="dropdown-item text-red-500" onclick="logout(event)">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="dashboard.html" class="block px-3 py-2 text-blue-700 bg-blue-50 rounded-md font-medium">Dashboard</a>
+                <a href="index.html" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">Home</a>
+                <a href="About.html" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">About</a>
+                <a href="contact.html" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">Contact</a>
+                <div class="pt-2 border-t">
+                    <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">
+                        <i class="fas fa-user-circle mr-2"></i> My Profile
+                    </a>
+                    <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">
+                        <i class="fas fa-cog mr-2"></i> Account Settings
+                    </a>
+                    <a href="#" onclick="openPopup('privacyPopup')" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">
+                        <i class="fas fa-lock mr-2"></i> Privacy
+                    </a>
+                    <a href="#" onclick="openPopup('editNamePopup')" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">
+                        <i class="fas fa-edit mr-2"></i> Edit Name
+                    </a>
+                    <a href="index.html" class="block px-3 py-2 text-red-600 hover:bg-red-50 rounded-md font-medium" onclick="logout(event)">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Portfolio Dashboard -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Main Content -->
+            <div class="md:w-3/4">
+                <!-- Portfolio Summary -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">My Portfolio</h2>
+                        <div class="flex space-x-2">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                                <i class="fas fa-plus mr-1"></i> Add Funds
+                            </button>
+                            <button class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md text-sm">
+                                <i class="fas fa-exchange-alt mr-1"></i> Transfer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-500 text-sm mb-1">Total Value</p>
+                            <p class="text-2xl font-bold">$24,568.42</p>
+                            <p class="text-green-500 text-sm"><i class="fas fa-caret-up mr-1"></i> +2.4% today</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-500 text-sm mb-1">Cash Balance</p>
+                            <p class="text-2xl font-bold">$5,240.18</p>
+                            <p class="text-blue-500 text-sm"><i class="fas fa-info-circle mr-1"></i> Available to trade</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-500 text-sm mb-1">Invested</p>
+                            <p class="text-2xl font-bold">$19,328.24</p>
+                            <p class="text-green-500 text-sm"><i class="fas fa-caret-up mr-1"></i> +3.1% all time</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Portfolio Chart -->
+                    <div class="bg-gray-50 p-4 rounded-lg h-64">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-medium">Portfolio Performance</h3>
+                            <div class="flex space-x-2">
+                                <button class="bg-white px-3 py-1 rounded text-xs">1D</button>
+                                <button class="bg-white px-3 py-1 rounded text-xs">1W</button>
+                                <button class="bg-blue-600 text-white px-3 py-1 rounded text-xs">1M</button>
+                                <button class="bg-white px-3 py-1 rounded text-xs">1Y</button>
+                                <button class="bg-white px-3 py-1 rounded text-xs">ALL</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-line"></div>
+                            <div id="portfolio-chart-bars" class="h-full w-full flex items-end"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Holdings Section -->
+                <div class="bg-white rounded-xl shadow-sm p-6 fade-in" style="animation-delay: 0.2s;">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">My Holdings</h2>
+                        <div class="relative">
+                            <select class="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500 text-sm">
+                                <option>Sort by: Value (High to Low)</option>
+                                <option>Sort by: Value (Low to High)</option>
+                                <option>Sort by: Gain (High to Low)</option>
+                                <option>Sort by: Gain (Low to High)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shares</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Price</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Market Price</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gain/Loss</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Apple -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <i class="fab fa-apple text-gray-700"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Apple Inc.</div>
+                                                <div class="text-sm text-gray-500">AAPL</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">12</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$167.42</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$189.37</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$2,272.44</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            +13.1% (+$263.40)
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Buy</button>
+                                        <button class="text-red-600 hover:text-red-900">Sell</button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Tesla -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-bolt text-red-500"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Tesla Inc.</div>
+                                                <div class="text-sm text-gray-500">TSLA</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">8</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$265.75</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$248.50</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$1,988.00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                            -6.5% (-$138.00)
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Buy</button>
+                                        <button class="text-red-600 hover:text-red-900">Sell</button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Bitcoin -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+                                                <i class="fab fa-bitcoin text-orange-500"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">Bitcoin</div>
+                                                <div class="text-sm text-gray-500">BTC/USD</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0.42</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$38,450.00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$42,150.00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$17,703.00</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            +9.6% (+$1,554.00)
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Buy</button>
+                                        <button class="text-red-600 hover:text-red-900">Sell</button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- SPY ETF -->
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-chart-line text-green-600"></i>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">SPDR S&P 500</div>
+                                                <div class="text-sm text-gray-500">SPY</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$412.30</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$438.72</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$2,193.60</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            +6.4% (+$132.10)
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="text-blue-600 hover:text-blue-900 mr-3">Buy</button>
+                                        <button class="text-red-600 hover:text-red-900">Sell</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="md:w-1/4">
+                <!-- Account Summary -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6 fade-in" style="animation-delay: 0.3s;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Account Summary</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Account Number</p>
+                            <p class="font-medium">TM-7845-6291</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Account Type</p>
+                            <p class="font-medium">Individual Margin</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Buying Power</p>
+                            <p class="font-medium text-green-600">$15,720.54</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Margin Used</p>
+                            <p class="font-medium">$3,240.18 (15%)</p>
+                        </div>
+                        
+                        <div class="pt-4 border-t">
+                            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-300 text-sm">
+                                <i class="fas fa-cog mr-1"></i> Manage Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl shadow-sm p-6 fade-in" style="animation-delay: 0.4s;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-green-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-arrow-up text-green-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Bought AAPL</p>
+                                <p class="text-sm text-gray-500">2 shares @ $187.50 • Today</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="bg-red-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-arrow-down text-red-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Sold TSLA</p>
+                                <p class="text-sm text-gray-500">3 shares @ $251.20 • Yesterday</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-plus text-blue-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Deposit</p>
+                                <p class="text-sm text-gray-500">$2,000.00 • 2 days ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <div class="bg-green-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-arrow-up text-green-600 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">Bought BTC</p>
+                                <p class="text-sm text-gray-500">0.1 BTC @ $41,230.00 • 3 days ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-4 border-t">
+                            <button class="w-full border border-blue-600 text-blue-600 hover:bg-blue-50 py-2 px-4 rounded transition duration-300 text-sm">
+                                View All Activity
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8 mb-12">
+                <!-- Column 1 -->
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-chart-line text-blue-400 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold">TradeMaster <span class="text-blue-400">Pro</span></span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Advanced trading platform for stocks, crypto, and forex markets.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Column 2 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Trading</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Stocks</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Forex</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Cryptocurrencies</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Commodities</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Indices</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Resources</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Market Analysis</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Trading Signals</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Economic Calendar</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Webinars</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Company</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Regulation</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">Legal</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <div class="md:flex justify-between items-center">
+                    <p class="text-gray-400 mb-4 md:mb-0">© 2023 TradeMaster Pro. All rights reserved.</p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of Service</a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">Risk Disclosure</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+        
+        // Popup functions
+        function openPopup(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePopup(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close popup when clicking outside content
+        document.querySelectorAll('.popup-overlay').forEach(popup => {
+            popup.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePopup(this.id);
+                }
+            });
+        });
+        
+        // Update profile name
+        function updateProfileName() {
+            const firstName = document.getElementById('firstNameInput').value;
+            const lastName = document.getElementById('lastNameInput').value;
+            
+            // Update the name in the navbar
+            document.querySelector('.dropdown button span').textContent = `${firstName} ${lastName}`;
+            document.querySelector('.dropdown button div span').textContent = `${firstName.charAt(0)}${lastName.charAt(0)}`;
+            
+            // Update the welcome message
+            document.querySelector('.bg-yellow-100 span.font-bold').textContent = `Welcome back, ${firstName}!`;
+            
+            closePopup('editNamePopup');
+            
+            // Show success message
+            alert('Profile name updated successfully!');
+        }
+        
+        // Logout function
+        function logout(e) {
+            if (e) e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                // Optionally clear session/localStorage here
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Generate random chart bars for portfolio
+        function generatePortfolioChartBars() {
+            const chartContainer = document.getElementById('portfolio-chart-bars');
+            chartContainer.innerHTML = '';
+            
+            // Generate 20 bars with increasing trend
+            for (let i = 0; i < 20; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                
+                // Create an increasing trend with some randomness
+                const baseHeight = 20 + (i * 3);
+                const randomVariation = Math.random() * 10;
+                bar.style.height = `${baseHeight + randomVariation}%`;
+                bar.style.left = `${i * (100 / 20)}%`;
+                
+                chartContainer.appendChild(bar);
+            }
+        }
+        
+        // Initialize charts
+        generatePortfolioChartBars();
+        
+        // Intersection Observer for fade-in animations
+        const fadeElements = document.querySelectorAll('.fade-in');
+        
+        const fadeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fadeIn');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        fadeElements.forEach(element => {
+            fadeObserver.observe(element);
+        });
+    </script>
+</body>
+</html>

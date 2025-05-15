@@ -115,6 +115,49 @@
         </div>
     </div>
     
+    <!-- Login Popup -->
+    <div id="loginPopup" class="popup-overlay">
+        <div class="popup-content relative">
+            <button onclick="closePopup('loginPopup')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">Sign In to TradeMaster Pro</h3>
+            <form id="loginForm" class="space-y-4">
+                <input type="email" name="email" placeholder="Email" required class="w-full px-4 py-2 border rounded">
+                <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border rounded">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded w-full font-medium">
+                    Login
+                </button>
+            </form>
+            <p class="mt-4 text-sm text-gray-600 text-center">
+                Don't have an account?
+                <button onclick="switchPopup('loginPopup','signupPopup')" class="text-blue-600 hover:underline">Sign Up</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- Sign Up Popup -->
+    <div id="signupPopup" class="popup-overlay">
+        <div class="popup-content relative">
+            <button onclick="closePopup('signupPopup')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">Create Your Account</h3>
+            <form id="signupForm" class="space-y-4">
+                <input type="text" name="name" placeholder="Full Name" required class="w-full px-4 py-2 border rounded">
+                <input type="email" name="email" placeholder="Email" required class="w-full px-4 py-2 border rounded">
+                <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border rounded">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded w-full font-medium">
+                    Sign Up
+                </button>
+            </form>
+            <p class="mt-4 text-sm text-gray-600 text-center">
+                Already have an account?
+                <button onclick="switchPopup('signupPopup','loginPopup')" class="text-blue-600 hover:underline">Login</button>
+            </p>
+        </div>
+    </div>
+    
     <!-- Notification Banner -->
     <div class="bg-yellow-100 text-yellow-800 py-2 px-4 text-center">
         <div class="ticker-container">
@@ -143,10 +186,13 @@
                     <a href="About.html" class="text-gray-700 hover:text-blue-600 font-medium">About Us</a>
                     <div class="flex space-x-4">
                         <button onclick="openPopup('moneyPopup')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition duration-300">
-                            Start Trading
+                            Trading Guide
                         </button>
-                        <button onclick="openPopup('contactPopup')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md font-medium transition duration-300">
-                            Contact Us
+                        <button onclick="openPopup('loginPopup')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-all duration-300 transform hover:scale-105">
+                            Sign In
+                        </button>
+                        <button onclick="openPopup('signupPopup')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md font-medium transition-all duration-300 transform hover:scale-105">
+                            Sign Up
                         </button>
                     </div>
                 </div>
@@ -570,7 +616,7 @@
                     <ul class="space-y-2">
                         <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Market Analysis</a></li>
                         <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Trading Signals</a></li>
-                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Economic Calendar</a></li>
+                        <li><a href="https://pateldaksh0.rf.ggd/" class="text-gray-400 hover:text-white transition duration-300">Economic Calendar</a></li>
                         <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Webinars</a></li>
                         <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Blog</a></li>
                     </ul>
@@ -627,6 +673,10 @@
             document.body.style.overflow = 'auto';
         }
         
+        function switchPopup(currentId, targetId) {
+            closePopup(currentId);
+            setTimeout(() => openPopup(targetId), 200);
+        }
         
         document.querySelectorAll('.popup-overlay').forEach(popup => {
             popup.addEventListener('click', function(e) {
@@ -678,6 +728,50 @@
         
         
         setInterval(updateStockPrices, 5000);
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: form.email.value,
+                    password: form.password.value
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Login successful!');
+                closePopup('loginPopup');
+                // Optionally redirect or update UI
+            } else {
+                alert(data.message || 'Login failed');
+            }
+        });
+
+        // Signup form handler
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const res = await fetch('/api/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: form.name.value,
+                    email: form.email.value,
+                    password: form.password.value
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Sign up successful! Please log in.');
+                switchPopup('signupPopup', 'loginPopup');
+            } else {
+                alert(data.message || 'Sign up failed');
+            }
+        });
     </script>
 </body>
 </html>
