@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeMaster Pro | Stock Trading Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom CSS for animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .popup-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            transform: scale(0.7);
+            transition: all 0.3s ease;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .popup-overlay.active .popup-content {
+            transform: scale(1);
+        }
+        
+        .ticker-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+        
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Popup Modals -->
+    <div id="moneyPopup" class="popup-overlay">
+        <div class="popup-content relative">
+            <button onclick="closePopup('moneyPopup')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">Make Your Money Work For You</h3>
+            <p class="mb-4">Our expert traders and AI-powered algorithms help maximize your returns with minimal risk. Start with as little as $500 and watch your portfolio grow.</p>
+            <div class="flex flex-col space-y-3">
+                <input type="text" placeholder="Your Name" class="px-4 py-2 border rounded">
+                <input type="email" placeholder="Your Email" class="px-4 py-2 border rounded">
+                <input type="tel" placeholder="Phone Number" class="px-4 py-2 border rounded">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded transition duration-300">
+                    Get Started Now
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="contactPopup" class="popup-overlay">
+        <div class="popup-content relative">
+            <button onclick="closePopup('contactPopup')" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">Contact Our Trading Experts</h3>
+            <p class="mb-4">Have questions about trading strategies or account setup? Our team is available 24/7 to assist you.</p>
+            <div class="flex flex-col space-y-3">
+                <input type="text" placeholder="Your Name" class="px-4 py-2 border rounded">
+                <input type="email" placeholder="Your Email" class="px-4 py-2 border rounded">
+                <textarea placeholder="Your Message" class="px-4 py-2 border rounded h-24"></textarea>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded transition duration-300">
+                    Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Banner -->
+    <div class="bg-yellow-100 text-yellow-800 py-2 px-4 text-center">
+        <div class="ticker-container">
+            <div class="ticker-content">
+                <span class="font-bold">Market Update:</span> NASDAQ +1.2% | S&P 500 +0.8% | Dow Jones +0.5% | Bitcoin $42,150 (+3.2%) | Gold $1,950/oz (-0.3%) | Oil $78.50/barrel (+1.8%)
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line text-blue-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-blue-800">TradeMaster <span class="text-blue-500">Pro</span></span>
+                    </div>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-blue-800 hover:text-blue-600 font-medium">Trading</a>
+                    <a href="contact.html" class="text-gray-700 hover:text-blue-600 font-medium">Contacts</a>
+                    <a href="About.html" class="text-gray-700 hover:text-blue-600 font-medium">About Us</a>
+                    <div class="flex space-x-4">
+                        <button onclick="openPopup('moneyPopup')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition duration-300">
+                            Start Trading
+                        </button>
+                        <button onclick="openPopup('contactPopup')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md font-medium transition duration-300">
+                            Contact Us
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">Trading</a>
+                <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">Home</a>
+                <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">Contacts</a>
+                <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium">About Us</a>
+                <div class="pt-2 space-y-2">
+                    <button onclick="openPopup('moneyPopup')" class="w-full text-left block px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md font-medium">
+                        Start Trading
+                    </button>
+                    <button onclick="openPopup('contactPopup')" class="w-full text-left block px-3 py-2 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-md font-medium">
+                        Contact Us
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white">
+        <div class="max-w-7xl mx-auto px-4 py-20 md:py-28">
+            <div class="md:flex items-center">
+                <div class="md:w-1/2 fade-in">
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-6">Smart Trading. <span class="text-blue-200">Smarter Investing.</span></h1>
+                    <p class="text-xl mb-8 text-blue-100">Join over 500,000 investors who trust TradeMaster Pro for their stock, crypto, and forex trading needs.</p>
+                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                        <button onclick="openPopup('moneyPopup')" class="bg-white text-blue-800 hover:bg-blue-100 font-bold py-3 px-8 rounded-full transition duration-300">
+                            Start Trading Now <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                        <button class="border-2 border-white text-white hover:bg-white hover:text-blue-800 font-bold py-3 px-8 rounded-full transition duration-300">
+                            <i class="fas fa-play-circle mr-2"></i> Watch Demo
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 mt-10 md:mt-0 fade-in" style="animation-delay: 0.3s;">
+                    <div class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl p-6 shadow-xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="font-bold text-blue-200">PORTFOLIO VALUE</h3>
+                                <p class="text-3xl font-bold">$24,568.42</p>
+                            </div>
+                            <div class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                +12.4%
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div class="h-2 bg-blue-400 bg-opacity-30 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-400 rounded-full" style="width: 65%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white bg-opacity-10 p-3 rounded-lg">
+                                <p class="text-blue-200 text-sm">Stocks</p>
+                                <p class="font-bold">$15,240</p>
+                            </div>
+                            <div class="bg-white bg-opacity-10 p-3 rounded-lg">
+                                <p class="text-blue-200 text-sm">Crypto</p>
+                                <p class="font-bold">$6,892</p>
+                            </div>
+                            <div class="bg-white bg-opacity-10 p-3 rounded-lg">
+                                <p class="text-blue-200 text-sm">Forex</p>
+                                <p class="font-bold">$2,436</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-blue-200 text-sm">Daily Change</p>
+                                <p class="text-green-400 font-bold">+$342.18</p>
+                            </div>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm">
+                                Trade Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Market Overview Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12 fade-in">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Market Overview</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Real-time market data to help you make informed trading decisions</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 fade-in" style="animation-delay: 0.2s;">
+                <!-- Stock Card 1 -->
+                <div class="stock-card bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800">Apple Inc.</h3>
+                            <p class="text-gray-500 text-sm">AAPL</p>
+                        </div>
+                        <div class="bg-blue-100 p-2 rounded-lg">
+                            <i class="fab fa-apple text-gray-700 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-2xl font-bold text-gray-800">$189.37</p>
+                        <p class="text-green-500 font-bold">+1.2%</p>
+                    </div>
+                    <div class="text-sm text-gray-500 mb-4">NASDAQ • Tech</div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-300">
+                        Trade
+                    </button>
+                </div>
+                
+                <!-- Stock Card 2 -->
+                <div class="stock-card bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800">Tesla Inc.</h3>
+                            <p class="text-gray-500 text-sm">TSLA</p>
+                        </div>
+                        <div class="bg-red-100 p-2 rounded-lg">
+                            <i class="fas fa-bolt text-red-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-2xl font-bold text-gray-800">$248.50</p>
+                        <p class="text-red-500 font-bold">-0.8%</p>
+                    </div>
+                    <div class="text-sm text-gray-500 mb-4">NASDAQ • Auto</div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-300">
+                        Trade
+                    </button>
+                </div>
+                
+                <!-- Stock Card 3 -->
+                <div class="stock-card bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800">Amazon.com</h3>
+                            <p class="text-gray-500 text-sm">AMZN</p>
+                        </div>
+                        <div class="bg-yellow-100 p-2 rounded-lg">
+                            <i class="fab fa-amazon text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-2xl font-bold text-gray-800">$134.25</p>
+                        <p class="text-green-500 font-bold">+2.1%</p>
+                    </div>
+                    <div class="text-sm text-gray-500 mb-4">NASDAQ • Retail</div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-300">
+                        Trade
+                    </button>
+                </div>
+                
+                <!-- Stock Card 4 -->
+                <div class="stock-card bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800">Bitcoin</h3>
+                            <p class="text-gray-500 text-sm">BTC/USD</p>
+                        </div>
+                        <div class="bg-orange-100 p-2 rounded-lg">
+                            <i class="fab fa-bitcoin text-orange-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-2xl font-bold text-gray-800">$42,150</p>
+                        <p class="text-green-500 font-bold">+3.2%</p>
+                    </div>
+                    <div class="text-sm text-gray-500 mb-4">Crypto • BTC</div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition duration-300">
+                        Trade
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center mt-10 fade-in" style="animation-delay: 0.4s;">
+                <button onclick="openPopup('moneyPopup')" class="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-full transition duration-300">
+                    View All Markets <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12 fade-in">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Why Choose TradeMaster Pro?</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Advanced tools and features designed for traders of all levels</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition duration-300 fade-in">
+                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-bolt text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Lightning Fast Execution</h3>
+                    <p class="text-gray-600">Our high-speed trading engine executes orders in milliseconds, ensuring you never miss a market opportunity.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition duration-300 fade-in" style="animation-delay: 0.2s;">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Secure & Regulated</h3>
+                    <p class="text-gray-600">Your funds are protected with bank-level security and we're fully regulated in all major financial jurisdictions.</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition duration-300 fade-in" style="animation-delay: 0.4s;">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-pie text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Advanced Analytics</h3>
+                    <p class="text-gray-600">Access real-time market data, technical indicators, and AI-powered trading signals to inform your strategy.</p>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 mt-8">
+                <!-- Feature 4 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition duration-300 fade-in">
+                    <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-mobile-alt text-yellow-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Mobile Trading</h3>
+                    <p class="text-gray-600">Trade on the go with our award-winning mobile app, available for iOS and Android devices.</p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition duration-300 fade-in" style="animation-delay: 0.2s;">
+                    <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-graduation-cap text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Education Center</h3>
+                    <p class="text-gray-600">Free webinars, tutorials, and trading courses to help you improve your skills and knowledge.</p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition duration-300 fade-in" style="animation-delay: 0.4s;">
+                    <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-headset text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">24/7 Support</h3>
+                    <p class="text-gray-600">Our expert support team is available round the clock to assist you with any questions or issues.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section class="py-16 gradient-bg text-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="md:flex items-center justify-between">
+                <div class="md:w-1/2 mb-8 md:mb-0 fade-in">
+                    <h2 class="text-3xl font-bold mb-4">Ready to Start Trading?</h2>
+                    <p class="text-xl text-blue-100 mb-6">Open your account in minutes and get access to global markets with low fees and tight spreads.</p>
+                    <div class="flex space-x-4">
+                        <button onclick="openPopup('moneyPopup')" class="bg-white text-blue-800 hover:bg-blue-100 font-bold py-3 px-8 rounded-full transition duration-300">
+                            Open Account
+                        </button>
+                        <button class="border-2 border-white text-white hover:bg-white hover:text-blue-800 font-bold py-3 px-8 rounded-full transition duration-300">
+                            <i class="fas fa-phone-alt mr-2"></i> Call Us
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 fade-in" style="animation-delay: 0.3s;">
+                    <div class="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-xl p-8">
+                        <h3 class="text-xl font-bold mb-4">New Client Bonus</h3>
+                        <p class="mb-6">Get up to $1,000 in trading credit when you fund your account with $10,000 or more.</p>
+                        <div class="flex items-center">
+                            <div class="mr-4">
+                                <p class="text-3xl font-bold">$1,000</p>
+                                <p class="text-sm text-blue-200">Trading Credit</p>
+                            </div>
+                            <div class="border-l border-blue-300 h-16"></div>
+                            <div class="ml-4">
+                                <p class="text-sm text-blue-200 mb-1">Minimum Deposit</p>
+                                <p class="text-xl font-bold">$10,000</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12 fade-in">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">What Our Clients Say</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Join thousands of satisfied traders who've found success with our platform</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-gray-50 p-8 rounded-xl fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 mr-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-6">"TradeMaster Pro's platform is incredibly intuitive. I've been able to grow my portfolio by 35% in just 6 months using their advanced charting tools."</p>
+                    <div class="flex items-center">
+                        <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="Sarah J." class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <p class="font-bold text-gray-800">Sarah J.</p>
+                            <p class="text-sm text-gray-500">Day Trader</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="bg-gray-50 p-8 rounded-xl fade-in" style="animation-delay: 0.2s;">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 mr-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-6">"The execution speed is unmatched. I've tried several platforms, but none come close to TradeMaster Pro when it comes to getting the best prices."</p>
+                    <div class="flex items-center">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael T." class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <p class="font-bold text-gray-800">Michael T.</p>
+                            <p class="text-sm text-gray-500">Swing Trader</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 3 -->
+                <div class="bg-gray-50 p-8 rounded-xl fade-in" style="animation-delay: 0.4s;">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 mr-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-6">"As a beginner, I really appreciated the educational resources. The customer support team walked me through my first trades and I felt confident."</p>
+                    <div class="flex items-center">
+                        <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Jennifer L." class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <p class="font-bold text-gray-800">Jennifer L.</p>
+                            <p class="text-sm text-gray-500">New Investor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8 mb-12">
+                <!-- Column 1 -->
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-chart-line text-blue-400 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold">TradeMaster <span class="text-blue-400">Pro</span></span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Advanced trading platform for stocks, crypto, and forex markets.</p>
+                    <div class="flex space-x-4">
+                        <a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://www.instagram.com/pateldaksh0/" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Column 2 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Trading</h3>
+                    <ul class="space-y-2">
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Stocks</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Forex</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Cryptocurrencies</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Commodities</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Indices</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Resources</h3>
+                    <ul class="space-y-2">
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Market Analysis</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Trading Signals</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Economic Calendar</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Webinars</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4 -->
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Company</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">About Us</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Careers</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Regulation</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Contact Us</a></li>
+                        <li><a href="https://pateldaksh0.rf.gd/" class="text-gray-400 hover:text-white transition duration-300">Legal</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <div class="md:flex justify-between items-center">
+                    <p class="text-gray-400 mb-4 md:mb-0">© 2023 TradeMaster Pro. All rights reserved.</p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">Privacy Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">Terms of Service</a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">Risk Disclosure</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    
+    <div class="fixed bottom-6 right-6 z-50">
+        <button onclick="openPopup('moneyPopup')" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition duration-300 transform hover:scale-110">
+            <i class="fas fa-chart-line text-xl"></i>
+        </button>
+    </div>
+    
+    <script>
+        
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+        
+        
+        function openPopup(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closePopup(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        
+        document.querySelectorAll('.popup-overlay').forEach(popup => {
+            popup.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePopup(this.id);
+                }
+            });
+        });
+        
+        
+        const fadeElements = document.querySelectorAll('.fade-in');
+        
+        const fadeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fadeIn');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        
+        fadeElements.forEach(element => {
+            fadeObserver.observe(element);
+        });
+        
+        
+        function updateStockPrices() {
+            const stocks = [
+                { id: 'aapl-price', change: 'aapl-change', current: 189.37 },
+                { id: 'tsla-price', change: 'tsla-change', current: 248.50 },
+                { id: 'amzn-price', change: 'amzn-change', current: 134.25 },
+                { id: 'btc-price', change: 'btc-change', current: 42150 }
+            ];
+            
+            stocks.forEach(stock => {
+                const change = (Math.random() - 0.5) * 2;
+                const newPrice = stock.current * (1 + change/100);
+                const priceElement = document.getElementById(stock.id);
+                const changeElement = document.getElementById(stock.change);
+                
+                if (priceElement && changeElement) {
+                    priceElement.textContent = newPrice.toFixed(change < 0 ? 2 : 2);
+                    changeElement.textContent = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
+                    changeElement.className = `font-bold ${change > 0 ? 'text-green-500' : 'text-red-500'}`;
+                }
+            });
+        }
+        
+        
+        setInterval(updateStockPrices, 5000);
+    </script>
+</body>
+</html>
