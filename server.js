@@ -1,4 +1,4 @@
-node -vconst express = require('express');
+const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 
 const USERS_FILE = './users.json';
 
-// Helper to read/write users (for demo only, use a real DB in production)
+// Helper to read/write users
 function readUsers() {
     if (!fs.existsSync(USERS_FILE)) return [];
     return JSON.parse(fs.readFileSync(USERS_FILE));
@@ -26,7 +26,7 @@ app.post('/api/signup', (req, res) => {
     if (users.find(u => u.email === email)) {
         return res.json({ success: false, message: 'Email already registered.' });
     }
-    users.push({ name, email, password }); // Passwords should be hashed!
+    users.push({ name, email, password }); // For demo only! Hash passwords in production.
     writeUsers(users);
     res.json({ success: true });
 });
@@ -43,50 +43,7 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// Serve static files (for testing)
+// Serve static files
 app.use(express.static('.'));
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
-
-// Client-side login form handling
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            email: form.email.value,
-            password: form.password.value
-        })
-    });
-    const data = await res.json();
-    if (data.success) {
-        // Redirect to dashboard after successful login
-        window.location.href = 'dashboard.html';
-    } else {
-        alert(data.message || 'Login failed');
-    }
-});
-
-// Client-side signup form handling
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const res = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            name: form.name.value,
-            email: form.email.value,
-            password: form.password.value
-        })
-    });
-    const data = await res.json();
-    if (data.success) {
-        // Redirect to dashboard after successful signup
-        window.location.href = 'dashboard.html';
-    } else {
-        alert(data.message || 'Sign up failed');
-    }
-});
