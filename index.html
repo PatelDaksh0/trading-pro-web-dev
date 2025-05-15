@@ -772,6 +772,16 @@
                 alert(data.message || 'Sign up failed');
             }
         });
+
+        // Auto-open login or signup popup if hash is present in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.location.hash === '#login') {
+                openPopup('loginPopup');
+            }
+            if (window.location.hash === '#signup') {
+                openPopup('signupPopup');
+            }
+        });
     </script>
 </body>
 </html>
